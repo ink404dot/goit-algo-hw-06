@@ -2,7 +2,7 @@ from collections import UserDict
 from typing import Optional
 
 
-class PhoneLengthValidation(Exception):
+class PhoneValidation(Exception):
     def __init__(self, message: str = "Довжина телефонного номера повинна бути 10 символів.") -> None:
         self.message = message
         super().__init__(self.message)
@@ -27,7 +27,7 @@ class Name(Field):
         if self.validate(value):
             super().__init__(value)
         else:
-            NameValidation()
+            raise NameValidation()
 
     @staticmethod
     def validate(value: str) -> bool:
@@ -39,11 +39,11 @@ class Phone(Field):
         if self.validate(value):
             super().__init__(value)
         else:
-            PhoneLengthValidation()
+            raise PhoneValidation()
 
     @staticmethod
     def validate(value: str) -> bool:
-        return len(value) == 10
+        return len(value) == 10 and value.isdigit()
 
 
 class Record:
@@ -67,8 +67,11 @@ class Record:
         return matching_phones[0] if matching_phones else None
 
     def edit_phone(self, old_value: str, new_value: str) -> None:
-        self.remove_phone(old_value)
-        self.add_phone(new_value)
+        if Phone.validate(new_value):
+            self.remove_phone(old_value)
+            self.add_phone(new_value)
+        else:
+            raise PhoneValidation()
 
     def __str__(self) -> str:
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
